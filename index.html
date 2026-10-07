@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STUDY QUEST - ตารางติวและตารางเวลาช่วงปิดเทอม</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#120d1c;--panel:#221a35;--panel2:#33265a;--ink:#e9e2ff;--dim:#9b8fc0;--gold:#ffd24a;--green:#62e07a;--blue:#52b8ff;--red:#ff5d73;--purple:#a77bff;--line:#07040d}
+body{font-family:'Prompt',system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+body::before{content:"";position:fixed;left:0;top:0;width:3px;height:3px;background:#fff;opacity:.6;pointer-events:none;z-index:0;
+ box-shadow:80px 120px #fff,240px 60px var(--gold),420px 200px #fff,610px 90px var(--blue),760px 300px #fff,130px 380px var(--purple),330px 470px #fff,560px 520px #fff,900px 160px var(--gold),1010px 420px #fff,1180px 80px #fff,1300px 260px var(--blue),1450px 150px #fff,40px 620px #fff,700px 640px var(--gold),1200px 600px #fff;animation:tw 4s steps(2) infinite}
+@keyframes tw{50%{opacity:.25}}
+@keyframes drop{from{transform:translateY(-16px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){body::before,.toast{animation:none}}
+main{position:relative;z-index:1}
+.pf{font-family:'Press Start 2P','Prompt',monospace;letter-spacing:.03em}
+.px{background:var(--panel);border:4px solid var(--line);box-shadow:inset 4px 4px 0 rgba(255,255,255,.08),inset -4px -4px 0 rgba(0,0,0,.35),0 6px 0 var(--line)}
+.btn{font-weight:600;font-size:.85rem;color:#1a1200;border:4px solid var(--line);padding:.45rem .9rem;cursor:pointer;
+ box-shadow:inset 3px 3px 0 rgba(255,255,255,.35),inset -3px -3px 0 rgba(0,0,0,.3),0 4px 0 var(--line)}
+.btn:active{transform:translateY(4px);box-shadow:inset 3px 3px 0 rgba(255,255,255,.35),inset -3px -3px 0 rgba(0,0,0,.3),0 0 0 var(--line)}
+.btn:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.b-gold{background:var(--gold)}.b-blue{background:var(--blue)}.b-red{background:var(--red);color:#2a0008}.b-purple{background:var(--purple);color:#1b0a40}
+.b-ghost{background:#3a2f5c;color:var(--ink)}
+.bar{height:22px;background:#0d0a14;border:4px solid var(--line);position:relative;overflow:hidden}
+.bar>i{display:block;height:100%;transition:width .4s steps(10)}
+.bar::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 3px),#0d0a14 calc(10% - 3px) 10%)}
+.quest{background:var(--panel);border:4px solid var(--line);border-left-width:12px;box-shadow:inset 3px 3px 0 rgba(255,255,255,.06),0 4px 0 var(--line)}
+.quest.cur{background:var(--panel2);box-shadow:0 0 0 4px var(--gold),0 8px 0 4px var(--line)}
+.slot{width:46px;height:46px;background:#0d0a14;border:4px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.chk{appearance:none;-webkit-appearance:none;width:26px;height:26px;background:#0d0a14;border:4px solid #5b4a8c;cursor:pointer;flex-shrink:0;display:grid;place-items:center}
+.chk:checked{background:var(--green);border-color:var(--line)}
+.chk:checked::after{content:"✔";color:var(--line);font-size:15px;font-weight:700}
+.tag{font-family:'Press Start 2P',monospace;font-size:9px;padding:3px 5px;border:3px solid var(--line)}
+input[type=text],input[type=time]{background:#0d0a14;color:var(--ink);border:4px solid #5b4a8c;padding:.4rem .6rem;width:100%;margin-top:.25rem;color-scheme:dark}
+.toast{animation:drop .25s steps(4);background:var(--panel2);border:4px solid var(--line);border-left-width:12px;box-shadow:0 5px 0 var(--line);padding:.7rem .9rem;font-size:.85rem;font-weight:500}
+</style>
+</head>
+<body>
+<div id="toasts" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md space-y-3"></div>
+
+<main class="max-w-4xl mx-auto px-4 py-6 sm:py-10">
+  <header class="mb-7 flex items-center gap-4">
+    <div id="logo"></div>
+    <div>
+      <h1 class="pf text-lg sm:text-2xl" style="color:var(--gold);text-shadow:3px 3px 0 #000">STUDY QUEST</h1>
+      <p class="font-semibold mt-2">ตารางติวและตารางเวลาช่วงปิดเทอม</p>
+      <p id="dateLine" class="text-sm" style="color:var(--dim)"></p>
+    </div>
+  </header>
+
+  <section class="grid md:grid-cols-5 gap-5 mb-7">
+    <div class="px md:col-span-3 p-5">
+      <div class="flex items-center justify-between gap-2">
+        <span class="pf text-[10px]" style="color:var(--green)">▶ ภารกิจตอนนี้</span>
+        <span id="clock" class="pf text-[11px] px-2 py-1" style="background:#0d0a14;color:var(--blue)">--:--:--</span>
+      </div>
+      <div class="flex items-center gap-4 mt-4">
+        <div id="curIcon" class="slot" style="width:64px;height:64px;font-size:2.2rem">⏰</div>
+        <div class="min-w-0">
+          <div id="curTitle" class="text-lg font-semibold leading-snug break-words">—</div>
+          <div id="curTime" class="text-sm mt-1" style="color:var(--dim)"></div>
+        </div>
+      </div>
+      <div class="bar mt-5"><i id="curBar" style="width:0;background:var(--blue)"></i></div>
+    </div>
+    <div class="px md:col-span-2 p-5">
+      <div class="pf text-[10px]" style="color:var(--gold)">⏳ ภารกิจถัดไปใน</div>
+      <div id="countdown" class="pf text-2xl mt-4" style="color:var(--gold);text-shadow:3px 3px 0 #000">00:00:00</div>
+      <div id="nextTitle" class="text-sm mt-4 break-words" style="color:var(--dim)">ถัดไป: —</div>
+    </div>
+  </section>
+
+  <section class="px p-5 mb-7">
+    <div class="flex items-end justify-between gap-3 flex-wrap">
+      <div>
+        <div class="pf text-[10px]" style="color:var(--red)">EXP ประจำวัน</div>
+        <div id="progTxt" class="text-sm mt-2" style="color:var(--dim)">0 / 0 ภารกิจ</div>
+      </div>
+      <div id="hearts" class="flex gap-1"></div>
+      <div id="progPct" class="pf text-2xl" style="color:var(--green);text-shadow:3px 3px 0 #000">0%</div>
+    </div>
+    <div class="bar mt-4"><i id="progBar" style="width:0;background:linear-gradient(var(--green),#2fa84a)"></i></div>
+    <p id="progMsg" class="pf text-[10px] mt-3 min-h-[1em]" style="color:var(--gold)"></p>
+  </section>
+
+  <section class="flex flex-wrap gap-3 mb-6">
+    <button id="btnNotif" class="btn b-purple">🔔 เปิดการแจ้งเตือน</button>
+    <button id="btnTest" class="btn b-blue">🔊 ทดสอบเสียง</button>
+    <button id="btnAdd" class="btn b-gold">➕ เพิ่มภารกิจ</button>
+    <button id="btnClear" class="btn b-ghost">ล้างเช็กลิสต์วันนี้</button>
+    <button id="btnReset" class="btn b-ghost">คืนค่าตารางเริ่มต้น</button>
+  </section>
+
+  <section id="list" class="space-y-4"></section>
+  <p class="text-center text-xs mt-10" style="color:var(--dim)">บันทึกอัตโนมัติในเบราว์เซอร์นี้ (LocalStorage) · เปิดหน้านี้ทิ้งไว้เพื่อรับการแจ้งเตือน</p>
+</main>
+
+<div id="modal" class="hidden fixed inset-0 z-40 flex items-center justify-center p-4" style="background:rgba(5,3,10,.75)">
+  <div class="px p-6 w-full max-w-md">
+    <h2 id="mTitle" class="pf text-xs mb-5" style="color:var(--gold)">เพิ่มภารกิจ</h2>
+    <div class="grid grid-cols-5 gap-3">
+      <label class="col-span-1 text-sm">ไอคอน<input id="fIcon" type="text" maxlength="4" class="text-center text-xl" placeholder="📖"></label>
+      <label class="col-span-4 text-sm">ชื่อภารกิจ<input id="fTitle" type="text" placeholder="เช่น ติวเคมี"></label>
+      <label class="col-span-2 text-sm">เริ่ม<input id="fStart" type="time"></label>
+      <label class="col-span-3 text-sm">สิ้นสุด (ไม่ใส่ก็ได้)<input id="fEnd" type="time"></label>
+    </div>
+    <p id="fErr" class="text-sm mt-3 hidden" style="color:var(--red)"></p>
+    <div class="flex justify-end gap-3 mt-6">
+      <button id="mCancel" class="btn b-ghost">ยกเลิก</button>
+      <button id="mSave" class="btn b-gold">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div id="confirm" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background:rgba(5,3,10,.75)">
+  <div class="px p-6 w-full max-w-sm">
+    <h2 class="pf text-xs mb-4" style="color:var(--red)">ยืนยัน</h2>
+    <p id="cMsg" class="break-words"></p>
+    <div class="flex justify-end gap-3 mt-6">
+      <button id="cNo" class="btn b-ghost">ยกเลิก</button>
+      <button id="cYes" class="btn b-red">ตกลง</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULTS=[
+  ['wake','07:30','08:30','🌅','ตื่นนอน / อาบน้ำ / กินข้าวเช้า'],
+  ['calc','08:30','10:00','🧮','ติวรอบเช้า 1 (วิชาคำนวณ: คณิต / ฟิสิกส์)'],
+  ['snack','10:00','10:30','🍪','พักสายตา / กินขนม (30 นาที)'],
+  ['content','10:30','12:00','🧪','ติวรอบเช้า 2 (วิชาเนื้อหา: เคมี / ชีวะ)'],
+  ['lunch','12:00','13:30','🍚','กินข้าวเที่ยง / พักผ่อนยาว'],
+  ['exam','13:30','15:30','⏱️','ติวรอบบ่าย (จับเวลาทำข้อสอบจริง / NETSAT)'],
+  ['free','15:30','17:00','🎮','เวลาทำกิจกรรมที่ชอบ (เล่นเกม SAMP/Minecraft / ดูอนิเมะ 1.5 ชม.)'],
+  ['extra','17:00','18:30','📖','ติวรอบเย็น (ทำโจทย์เพิ่ม / ทบทวนวิชาที่ยังอ่อน)'],
+  ['dinner','18:30','19:30','🍜','กินข้าวเย็น / อาบน้ำ'],
+  ['night','19:30','21:00','📝','ติวรอบค่ำ (ทบทวนเฉลย + อังกฤษ / ไทย)'],
+  ['private','21:00','23:00','🌙','เวลาส่วนตัวยามค่ำ (2 ชม.)'],
+  ['sleep','23:00','','😴','เข้านอน']
+].map(([id,start,end,icon,title])=>({id,start,end,icon,title}));
+const ACC=['#ff5d73','#52b8ff','#ffd24a','#62e07a','#a77bff','#ff9a4a','#4fe3c8'];
+const KEY='sp_schedule_v2';
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,'0');
+const todayKey=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const toMin=t=>{const [a,b]=String(t).split(':').map(Number);return (a||0)*60+(b||0)};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+let items=(()=>{try{const v=JSON.parse(localStorage.getItem(KEY));if(Array.isArray(v)&&v.length&&v.every(x=>x&&x.id&&x.start&&x.title))return v}catch(e){}return DEFAULTS.map(x=>({...x}))})();
+const saveItems=()=>{try{localStorage.setItem(KEY,JSON.stringify(items))}catch(e){}};
+const getDone=()=>{try{const v=JSON.parse(localStorage.getItem('sp_done_'+todayKey()));return Array.isArray(v)?v:[]}catch(e){return[]}};
+const setDone=a=>{try{localStorage.setItem('sp_done_'+todayKey(),JSON.stringify(a))}catch(e){}};
+const sorted=()=>[...items].sort((a,b)=>toMin(a.start)-toMin(b.start));
+
+/* pixel sprites */
+function sprite(rows,map,px){
+  let r='';rows.forEach((row,y)=>[...row].forEach((c,x)=>{if(map[c])r+='<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+map[c]+'"/>'}));
+  return '<svg viewBox="0 0 '+rows[0].length+' '+rows.length+'" width="'+rows[0].length*px+'" height="'+rows.length*px+'" shape-rendering="crispEdges" aria-hidden="true">'+r+'</svg>';
+}
+const HEART=['.XX..XX.','XhXXXXXX','XXXXXXXs','XXXXXXss','.XXXXss.','..XXss..','...ss...'];
+const GEM=['..XXX..','.XhXXs.','XXXXXss','.XXXss.','..Xss..','...s...'];
+const heart=on=>sprite(HEART,on?{X:'#ff5d73',h:'#fff',s:'#b02a45'}:{X:'#3a2f5c',h:'#4a3f6c',s:'#2a2142'},3);
+$('#logo').innerHTML=sprite(GEM,{X:'#52b8ff',h:'#fff',s:'#2a6fb0'},7);
+
+/* sound / toast / notification */
+let ac;
+function unlock(){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume()}catch(e){}}
+document.addEventListener('click',unlock);
+function beep(){
+  unlock();if(!ac)return;
+  [660,880,1320].forEach((f,i)=>{
+    const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime+i*.18;
+    o.type='square';o.frequency.value=f;o.connect(g);g.connect(ac.destination);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.12,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.16);
+    o.start(t);o.stop(t+.17);
+  });
+}
+function toast(msg,c='var(--gold)'){
+  const d=document.createElement('div');d.className='toast';d.style.borderLeftColor=c;d.textContent=msg;
+  $('#toasts').appendChild(d);setTimeout(()=>d.remove(),6000);
+}
+function notify(title,body){
+  toast('🔔 '+title+(body?' — '+body:''));beep();
+  if('Notification' in window&&Notification.permission==='granted'){try{new Notification(title,{body})}catch(e){}}
+}
+function updateNotifBtn(){
+  const b=$('#btnNotif');
+  if(!('Notification' in window)){b.textContent='🔕 เบราว์เซอร์ไม่รองรับ';return}
+  const p=Notification.permission;
+  b.textContent=p==='granted'?'🔔 แจ้งเตือนเปิดอยู่':p==='denied'?'🔕 ถูกบล็อก (เปิดในตั้งค่าเบราว์เซอร์)':'🔔 เปิดการแจ้งเตือน';
+}
+$('#btnNotif').onclick=async()=>{
+  unlock();
+  if(!('Notification' in window)){toast('เบราว์เซอร์นี้ไม่รองรับ Notification แต่ยังมีเสียงและข้อความบนหน้าจอ','var(--red)');return}
+  if(Notification.permission==='default'){try{await Notification.requestPermission()}catch(e){}}
+  updateNotifBtn();
+  if(Notification.permission==='granted')notify('เปิดการแจ้งเตือนแล้ว','จะเตือนทุกครั้งที่เปลี่ยนภารกิจ');
+  else toast('ยังไม่ได้รับอนุญาตแจ้งเตือน','var(--red)');
+};
+$('#btnTest').onclick=()=>{unlock();notify('ทดสอบการแจ้งเตือน','เสียงและข้อความทำงานปกติ')};
+
+/* state */
+function getState(){
+  const s=sorted();if(!s.length)return null;
+  const n=new Date(),m=n.getHours()*60+n.getMinutes()+n.getSeconds()/60;
+  let ci=-1;s.forEach((x,i)=>{if(toMin(x.start)<=m)ci=i});
+  if(ci<0)ci=s.length-1;
+  const ni=(ci+1)%s.length;
+  let diff=(toMin(s[ni].start)-m)*60;if(diff<=0)diff+=86400;
+  const total=((toMin(s[ni].start)-toMin(s[ci].start)+1440)%1440)||1440;
+  return{s,ci,ni,diff,total};
+}
+const fmt=sec=>{sec=Math.max(0,Math.floor(sec));return pad(Math.floor(sec/3600))+':'+pad(Math.floor(sec%3600/60))+':'+pad(sec%60)};
+const range=x=>x.end?x.start+' - '+x.end+' น.':x.start+' น.';
+
+let lastId=null,lastDay=todayKey();
+function tick(){
+  const now=new Date();
+  $('#clock').textContent=pad(now.getHours())+':'+pad(now.getMinutes())+':'+pad(now.getSeconds());
+  $('#dateLine').textContent=now.toLocaleDateString('th-TH',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  if(todayKey()!==lastDay){lastDay=todayKey();renderList()}
+  const st=getState();
+  if(!st){
+    $('#curIcon').textContent='⏰';$('#curTitle').textContent='ยังไม่มีภารกิจ';$('#curTime').textContent='กด “เพิ่มภารกิจ” เพื่อเริ่มต้น';
+    $('#countdown').textContent='00:00:00';$('#nextTitle').textContent='ถัดไป: —';$('#curBar').style.width='0';return;
+  }
+  const cur=st.s[st.ci],nxt=st.s[st.ni];
+  $('#curIcon').textContent=cur.icon||'⏰';
+  $('#curTitle').textContent=cur.title;
+  $('#curTime').textContent=range(cur);
+  $('#countdown').textContent=fmt(st.diff);
+  $('#nextTitle').textContent='ถัดไป: '+(nxt.icon||'')+' '+nxt.title+' ('+nxt.start+' น.)';
+  $('#curBar').style.width=Math.min(100,Math.max(0,(1-st.diff/(st.total*60))*100))+'%';
+  if(lastId!==cur.id){
+    const first=lastId===null;lastId=cur.id;
+    renderList();
+    if(!first)notify('ถึงเวลา: '+cur.title,range(cur));
+  }
+}
+
+/* list / progress */
+function renderList(){
+  const s=sorted(),done=getDone(),st=getState(),curId=st?st.s[st.ci].id:null,box=$('#list');
+  box.innerHTML='';
+  if(!s.length)box.innerHTML='<p class="text-center py-10" style="color:var(--dim)">ยังไม่มีภารกิจ กด “เพิ่มภารกิจ” เพื่อเริ่มต้น</p>';
+  s.forEach((x,i)=>{
+    const isDone=done.includes(x.id),isCur=x.id===curId,row=document.createElement('div');
+    row.className='quest flex items-center gap-3 px-3 py-3'+(isCur?' cur':'');
+    row.style.borderLeftColor=ACC[i%ACC.length];
+    row.innerHTML=
+      '<input type="checkbox" class="chk" aria-label="ทำเสร็จแล้ว" '+(isDone?'checked':'')+'>'+
+      '<div class="slot">'+esc(x.icon||'⏰')+'</div>'+
+      '<div class="min-w-0 flex-1"><div class="flex items-center gap-2 flex-wrap text-xs" style="color:var(--dim)"><span>'+range(x)+'</span>'+
+      (isCur?'<span class="tag" style="background:var(--gold);color:var(--line)">NOW</span>':'')+
+      (isDone?'<span class="tag" style="background:var(--green);color:var(--line)">CLEAR</span>':'')+'</div>'+
+      '<div class="font-medium break-words mt-1" style="'+(isDone?'text-decoration:line-through;color:var(--dim)':'')+'">'+esc(x.title)+'</div></div>'+
+      '<button class="btn b-ghost edit" aria-label="แก้ไข" style="padding:.3rem .6rem">✏️</button>'+
+      '<button class="btn b-red del" aria-label="ลบ" style="padding:.3rem .6rem">🗑️</button>';
+    const cb=row.querySelector('input');
+    cb.onchange=()=>{let d=getDone();d=cb.checked?[...new Set([...d,x.id])]:d.filter(v=>v!==x.id);setDone(d);if(cb.checked)toast('✅ ภารกิจสำเร็จ: '+x.title,'var(--green)');renderList()};
+    row.querySelector('.edit').onclick=()=>openModal(x);
+    row.querySelector('.del').onclick=()=>ask('ลบภารกิจ “'+x.title+'” ?',()=>{items=items.filter(v=>v.id!==x.id);saveItems();setDone(getDone().filter(v=>v!==x.id));lastId=null;tick();renderList();toast('ลบภารกิจแล้ว','var(--red)')});
+    box.appendChild(row);
+  });
+  const ids=s.map(x=>x.id),n=done.filter(v=>ids.includes(v)).length,total=s.length,pct=total?Math.round(n/total*100):0;
+  $('#progPct').textContent=pct+'%';$('#progBar').style.width=pct+'%';
+  $('#progTxt').textContent=n+' / '+total+' ภารกิจ';
+  const on=Math.round(pct/20);$('#hearts').innerHTML=[0,1,2,3,4].map(i=>heart(i<on)).join('');
+  $('#progMsg').textContent=pct===100?'★ STAGE CLEAR! ทำครบทุกภารกิจแล้ว ★':pct>=50?'ผ่านครึ่งทางแล้ว สู้ต่อ!':'';
+}
+
+/* modal */
+let editId=null;
+function openModal(x){
+  editId=x?x.id:null;$('#mTitle').textContent=x?'แก้ไขภารกิจ':'เพิ่มภารกิจ';
+  $('#fIcon').value=x?x.icon:'';$('#fTitle').value=x?x.title:'';$('#fStart').value=x?x.start:'';$('#fEnd').value=x?x.end:'';
+  $('#fErr').classList.add('hidden');$('#modal').classList.remove('hidden');$('#fTitle').focus();
+}
+const closeModal=()=>$('#modal').classList.add('hidden');
+$('#btnAdd').onclick=()=>openModal(null);
+$('#mCancel').onclick=closeModal;
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+$('#modal').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT')$('#mSave').click()});
+let yesFn=null;
+function ask(msg,fn){yesFn=fn;$('#cMsg').textContent=msg;$('#confirm').classList.remove('hidden');$('#cYes').focus()}
+function closeAsk(){$('#confirm').classList.add('hidden');yesFn=null}
+$('#cNo').onclick=closeAsk;
+$('#cYes').onclick=()=>{const f=yesFn;closeAsk();if(f)f()};
+$('#confirm').addEventListener('click',e=>{if(e.target.id==='confirm')closeAsk()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeAsk()}});
+$('#mSave').onclick=()=>{
+  const title=$('#fTitle').value.trim(),start=$('#fStart').value,end=$('#fEnd').value,icon=$('#fIcon').value.trim()||'📌';
+  const err=m=>{$('#fErr').textContent=m;$('#fErr').classList.remove('hidden')};
+  if(!title)return err('กรุณาใส่ชื่อภารกิจ');
+  if(!start)return err('กรุณาเลือกเวลาเริ่ม');
+  if(items.some(v=>v.id!==editId&&v.start===start))return err('มีภารกิจที่เริ่มเวลานี้อยู่แล้ว ลองเปลี่ยนเวลา');
+  if(editId)items=items.map(v=>v.id===editId?{...v,title,start,end,icon}:v);
+  else items.push({id:'u'+Date.now(),title,start,end,icon});
+  saveItems();closeModal();lastId=null;tick();renderList();toast('บันทึกภารกิจแล้ว','var(--green)');
+};
+
+$('#btnClear').onclick=()=>ask('ล้างเครื่องหมายสำเร็จของวันนี้ทั้งหมด?',()=>{setDone([]);renderList()});
+$('#btnReset').onclick=()=>ask('คืนค่าตารางเป็นแบบเริ่มต้น? ภารกิจที่แก้ไว้จะหายไป',()=>{items=DEFAULTS.map(x=>({...x}));saveItems();setDone([]);lastId=null;tick();renderList()});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick()});
+
+updateNotifBtn();tick();renderList();
+setInterval(tick,1000);
+</script>
+</body>
+</html>
